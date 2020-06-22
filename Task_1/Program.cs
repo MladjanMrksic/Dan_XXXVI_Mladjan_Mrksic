@@ -54,6 +54,9 @@ namespace Task_1
             //Lock ensures only one thread can have access
             lock (l)
             {
+                //If matrix isn't initialized thread waits untill it gets initialized
+                while (matrix == null) 
+                    Monitor.Wait(l);
                 //This loop adds random numbers to queue 10000 times
                 for (int i = 0; i < 10000; i++)
                     rngQueue.Enqueue(rnd.Next(10, 99));

@@ -11,19 +11,29 @@ namespace Task_1
     class Program
     {
         static StreamWriter sw;
+        static StreamReader sr;
         public static int[,] matrix;
         public static int[] oddNumbers;
         static readonly Random rnd = new Random();
         readonly static object l = new object();
+        readonly static object l2 = new object();
         static Queue<int> rngQueue = new Queue<int>();
-        static readonly string path = ".../.../OddNumbers.txt";
+        static string path = ".../.../OddNumbers.txt";
         static void Main(string[] args)
         {
-            new Thread(new ThreadStart(MethodOneTask)).Start();
-            new Thread(new ThreadStart(MethodTwoTask)).Start();
+            Thread t1 = new Thread(ThreadOneTask);
+            Thread t2 = new Thread(ThreadTwoTask);            
+            Thread t3 = new Thread(ThreadThreeTask);
+            Thread t4 = new Thread(ThreadFourTask);
+            t1.Start();
+            t2.Start();
+            t1.Join();
+            t2.Join();
+            t3.Start();
+            t4.Start();
             Console.ReadLine();
         }
-        public static void MethodOneTask()
+        public static void ThreadOneTask()
         {
             lock (l)
             {                
@@ -38,10 +48,11 @@ namespace Task_1
                         matrix[i, j] = rngQueue.Dequeue();
                     }
                 }
+                Monitor.Pulse(l);
                 Console.WriteLine("Method 1 done");
             }          
         }
-        public static void MethodTwoTask()
+        public static void ThreadTwoTask()
         {
             Console.WriteLine("method 2 cant enter");
             lock (l)
@@ -55,10 +66,11 @@ namespace Task_1
                 Monitor.Pulse(l);
             }
         }
-        public static void MethodThreeTask()
+        public static void ThreadThreeTask()
         {
-            lock (l)
-            {
+            lock (l2)
+            {                
+                Console.WriteLine("Thread 3 starting");
                 List<int> tempList = new List<int>();
                 foreach (var num in matrix)
                 {
@@ -68,9 +80,10 @@ namespace Task_1
                     }
                 }
                 oddNumbers = tempList.ToArray();
-                if (!File.Exists(path))
+                Console.WriteLine("thread 3 odd number array created ");
+                if (File.Exists(path) == false)
                     File.Create(path).Close();
-                sw = new StreamWriter(path, append: true);
+                sw = new StreamWriter(path);
                 using (sw)
                 {
                     foreach (var num in oddNumbers)
@@ -78,8 +91,29 @@ namespace Task_1
                         sw.WriteLine();
                     }
                 }
-                Monitor.Pulse(l);
-            }            
+                Console.WriteLine("thread 3 pulsing");
+                Monitor.Pulse(l2);
+            }
+        }
+        public static void ThreadFourTask()
+        {
+            Console.WriteLine("Thread 4 cannot enter");
+            lock (l2)
+            {
+                Console.WriteLine("Thread 4 entered");
+                //Monitor.Wait(l);
+                
+                if (File.Exists(path) == false)
+                    File.Create(path).Close();
+                sr = new StreamReader(path);
+                using (sr)
+                {
+                    string line;
+                    while ((line = sr.ReadLine()) != null)
+                        Console.WriteLine(line);
+                }
+                Console.WriteLine("Thread 4 done");
+            }
         }
     }
 }

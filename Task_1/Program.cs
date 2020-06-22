@@ -54,7 +54,7 @@ namespace Task_1
             //Lock ensures only one thread can have access
             lock (l)
             {
-                //We add random numbers to queue 10000 times
+                //This loop adds random numbers to queue 10000 times
                 for (int i = 0; i < 10000; i++)
                     rngQueue.Enqueue(rnd.Next(10, 99));
                 //We use pulse to notify other waiting threads that the lock is released

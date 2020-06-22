@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -9,9 +10,13 @@ namespace Task_1
 {
     class Program
     {
+        static StreamWriter sw;
+        public static int[,] matrix;
+        public static int[] oddNumbers;
         static readonly Random rnd = new Random();
         readonly static object l = new object();
         static Queue<int> rngQueue = new Queue<int>();
+        static readonly string path = ".../.../OddNumbers.txt";
         static void Main(string[] args)
         {
             new Thread(new ThreadStart(MethodOneTask)).Start();
@@ -22,7 +27,7 @@ namespace Task_1
         {
             lock (l)
             {                
-                int[,] matrix = new int[100, 100];
+                matrix = new int[100, 100];
                 Console.WriteLine("Method 1 generated matrix and waiting");
                 Monitor.Wait(l);
                 Console.WriteLine("Method 1 resuming");
@@ -49,6 +54,32 @@ namespace Task_1
                 Console.WriteLine("method 2 done");
                 Monitor.Pulse(l);
             }
+        }
+        public static void MethodThreeTask()
+        {
+            lock (l)
+            {
+                List<int> tempList = new List<int>();
+                foreach (var num in matrix)
+                {
+                    if (num % 2 == 1)
+                    {
+                        tempList.Add(num);
+                    }
+                }
+                oddNumbers = tempList.ToArray();
+                if (!File.Exists(path))
+                    File.Create(path).Close();
+                sw = new StreamWriter(path, append: true);
+                using (sw)
+                {
+                    foreach (var num in oddNumbers)
+                    {
+                        sw.WriteLine();
+                    }
+                }
+                Monitor.Pulse(l);
+            }            
         }
     }
 }

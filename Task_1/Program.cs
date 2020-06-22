@@ -18,7 +18,7 @@ namespace Task_1
         readonly static object l = new object();
         readonly static object l2 = new object();
         static Queue<int> rngQueue = new Queue<int>();
-        static string path = ".../.../OddNumbers.txt";
+        static string path = @"...\...\OddNumbers.txt";
         static void Main(string[] args)
         {
             Thread t1 = new Thread(ThreadOneTask);
@@ -88,8 +88,8 @@ namespace Task_1
                 {
                     foreach (var num in oddNumbers)
                     {
-                        sw.WriteLine();
-                    }
+                        sw.WriteLine(num);
+                    }         
                 }
                 Console.WriteLine("thread 3 pulsing");
                 Monitor.Pulse(l2);

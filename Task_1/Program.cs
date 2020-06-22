@@ -27,8 +27,6 @@ namespace Task_1
             Thread t4 = new Thread(ThreadFourTask);
             t1.Start();
             t2.Start();
-            t1.Join();
-            t2.Join();
             t3.Start();
             t4.Start();
             Console.ReadLine();
@@ -68,8 +66,12 @@ namespace Task_1
         }
         public static void ThreadThreeTask()
         {
-            lock (l2)
+            lock (l)
             {                
+                while (matrix[matrix.GetLength(0)-1, matrix.GetLength(1)-1] == 0)
+                {
+                    Monitor.Wait(l);                    
+                }
                 Console.WriteLine("Thread 3 starting");
                 List<int> tempList = new List<int>();
                 foreach (var num in matrix)
@@ -92,20 +94,23 @@ namespace Task_1
                     }         
                 }
                 Console.WriteLine("thread 3 pulsing");
-                Monitor.Pulse(l2);
+                Monitor.Pulse(l);
             }
         }
         public static void ThreadFourTask()
-        {
+        {                    
             Console.WriteLine("Thread 4 cannot enter");
-            lock (l2)
+
+            lock (l)
             {
+                while (new FileInfo(path).Length == 0)
+                {
+                    Monitor.Wait(l);
+                }
                 Console.WriteLine("Thread 4 entered");
-                //Monitor.Wait(l);
-                
-                if (File.Exists(path) == false)
-                    File.Create(path).Close();
                 sr = new StreamReader(path);
+                if (File.Exists(path) == false)
+                    File.Create(path).Close();               
                 using (sr)
                 {
                     string line;

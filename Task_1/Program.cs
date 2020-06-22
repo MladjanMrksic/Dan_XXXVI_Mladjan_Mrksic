@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Task_1
 {
@@ -21,93 +18,67 @@ namespace Task_1
         static string path = @"...\...\OddNumbers.txt";
         static void Main(string[] args)
         {
-            Thread t1 = new Thread(ThreadOneTask);
-            Thread t2 = new Thread(ThreadTwoTask);            
-            Thread t3 = new Thread(ThreadThreeTask);
-            Thread t4 = new Thread(ThreadFourTask);
-            t1.Start();
-            t2.Start();
-            t3.Start();
-            t4.Start();
+            new Thread(new ThreadStart(PopulateMatrix)).Start();
+            new Thread(new ThreadStart(GenerateRandomNumbers)).Start();
+            new Thread(new ThreadStart(WriteOddNumbersToFile)).Start();
+            new Thread(new ThreadStart(ReadOddNumbersFromFile)).Start();
             Console.ReadLine();
         }
-        public static void ThreadOneTask()
+        public static void PopulateMatrix()
         {
             lock (l)
             {                
                 matrix = new int[100, 100];
-                Console.WriteLine("Method 1 generated matrix and waiting");
                 Monitor.Wait(l);
-                Console.WriteLine("Method 1 resuming");
                 for (int i = 0; i < matrix.GetLength(0); i++)
                 {
                     for (int j = 0; j < matrix.GetLength(1); j++)
-                    {
                         matrix[i, j] = rngQueue.Dequeue();
-                    }
                 }
                 Monitor.Pulse(l);
-                Console.WriteLine("Method 1 done");
             }          
         }
-        public static void ThreadTwoTask()
+        public static void GenerateRandomNumbers()
         {
-            Console.WriteLine("method 2 cant enter");
             lock (l)
             {
-                Console.WriteLine("method 2  entered");
                 for (int i = 0; i < 10000; i++)
-                {
                     rngQueue.Enqueue(rnd.Next(10, 99));
-                }
-                Console.WriteLine("method 2 done");
                 Monitor.Pulse(l);
             }
         }
-        public static void ThreadThreeTask()
+        public static void WriteOddNumbersToFile()
         {
             lock (l)
             {                
                 while (matrix[matrix.GetLength(0)-1, matrix.GetLength(1)-1] == 0)
-                {
-                    Monitor.Wait(l);                    
-                }
-                Console.WriteLine("Thread 3 starting");
+                    Monitor.Wait(l);              
                 List<int> tempList = new List<int>();
                 foreach (var num in matrix)
                 {
                     if (num % 2 == 1)
-                    {
                         tempList.Add(num);
-                    }
                 }
                 oddNumbers = tempList.ToArray();
-                Console.WriteLine("thread 3 odd number array created ");
                 if (File.Exists(path) == false)
                     File.Create(path).Close();
                 sw = new StreamWriter(path);
                 using (sw)
                 {
                     foreach (var num in oddNumbers)
-                    {
                         sw.WriteLine(num);
-                    }         
                 }
-                Console.WriteLine("thread 3 pulsing");
                 Monitor.Pulse(l);
             }
         }
-        public static void ThreadFourTask()
-        {                    
-            Console.WriteLine("Thread 4 cannot enter");
-
+        public static void ReadOddNumbersFromFile()
+        {   
             lock (l)
             {
                 while (new FileInfo(path).Length == 0)
                 {
                     Monitor.Wait(l);
                 }
-                Console.WriteLine("Thread 4 entered");
                 sr = new StreamReader(path);
                 if (File.Exists(path) == false)
                     File.Create(path).Close();               
@@ -117,7 +88,6 @@ namespace Task_1
                     while ((line = sr.ReadLine()) != null)
                         Console.WriteLine(line);
                 }
-                Console.WriteLine("Thread 4 done");
             }
         }
     }
